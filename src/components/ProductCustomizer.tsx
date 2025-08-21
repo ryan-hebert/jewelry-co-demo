@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Product } from '../types/product';
 import type { CartItem } from '../types/order';
 import { METAL_OPTIONS, STONE_OPTIONS, CARAT_OPTIONS, RING_SIZE_OPTIONS, NECKLACE_SIZE_OPTIONS } from '../types/customization';
@@ -20,35 +20,45 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Calculate price when selections change
+  // Debounced price calculation
+  const debouncedCalculatePrice = useCallback(
+    (() => {
+      let timeoutId: number;
+      return async () => {
+        if (!selectedProduct) return;
+        
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(async () => {
+          try {
+            setLoading(true);
+            const isRing = selectedProduct.name.toLowerCase().includes('ring');
+            const response = await apiService.calculatePrice({
+              productId: selectedProduct.id,
+              metal: selectedMetal,
+              stone: selectedStone,
+              caratSize: selectedCaratSize,
+              ringSize: isRing ? selectedRingSize : undefined,
+              necklaceSize: !isRing ? selectedNecklaceSize : undefined,
+            });
+            setCalculatedPrice(response.finalPrice);
+          } catch (error) {
+            console.error('Error calculating price:', error);
+            setCalculatedPrice(null);
+          } finally {
+            setLoading(false);
+          }
+        }, 300); // 300ms delay
+      };
+    })(),
+    [selectedProduct, selectedMetal, selectedCaratSize]
+  );
+
+  // Calculate price when selections change (only price-affecting options)
   useEffect(() => {
     if (selectedProduct) {
-      calculatePrice();
+      debouncedCalculatePrice();
     }
-  }, [selectedProduct, selectedMetal, selectedCaratSize, selectedRingSize, selectedNecklaceSize]); // Removed selectedStone since it's always Diamond
-
-  const calculatePrice = async () => {
-    if (!selectedProduct) return;
-
-    try {
-      setLoading(true);
-      const isRing = selectedProduct.name.toLowerCase().includes('ring');
-      const response = await apiService.calculatePrice({
-        productId: selectedProduct.id,
-        metal: selectedMetal,
-        stone: selectedStone,
-        caratSize: selectedCaratSize,
-        ringSize: isRing ? selectedRingSize : undefined,
-        necklaceSize: !isRing ? selectedNecklaceSize : undefined,
-      });
-      setCalculatedPrice(response.finalPrice);
-    } catch (error) {
-      console.error('Error calculating price:', error);
-      setCalculatedPrice(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [selectedProduct, selectedMetal, selectedCaratSize, debouncedCalculatePrice]);
 
   const handleAddToCart = () => {
     if (!selectedProduct || calculatedPrice === null) return;
