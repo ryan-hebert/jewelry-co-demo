@@ -5,7 +5,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add CORS policy
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
-    policy.WithOrigins("https://jewelry-customizer-emclbgodi-ryans-projects-dc24d5e5.vercel.app", 
+    policy.WithOrigins("https://jewelry-customizer.vercel.app",
+                      "https://jewelry-customizer-emclbgodi-ryans-projects-dc24d5e5.vercel.app", 
                       "https://jewelry-customizer-1xqlq051g-ryans-projects-dc24d5e5.vercel.app",
                       "http://localhost:5173",
                       "http://localhost:3000")
