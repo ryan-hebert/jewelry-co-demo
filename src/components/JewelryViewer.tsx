@@ -21,27 +21,27 @@ export default function JewelryViewer({ productType, metal, caratSize, ringSize,
       case 'ring':
         switch (metalKey) {
           case 'silver':
-            return '/src/assets/silver_ring.webp';
+            return '/assets/silver_ring.webp';
           case 'gold':
-            return '/src/assets/gold_ring.webp';
+            return '/assets/gold_ring.webp';
           case 'rose gold':
-            return '/src/assets/rose_gold_ring.webp';
+            return '/assets/rose_gold_ring.webp';
           default:
-            return '/src/assets/silver_ring.webp';
+            return '/assets/silver_ring.webp';
         }
       case 'necklace':
         switch (metalKey) {
           case 'silver':
-            return '/src/assets/silver_necklace.webp';
+            return '/assets/silver_necklace.webp';
           case 'gold':
-            return '/src/assets/gold_necklace.webp';
+            return '/assets/gold_necklace.webp';
           case 'rose gold':
-            return '/src/assets/rose_gold_necklace.webp';
+            return '/assets/rose_gold_necklace.webp';
           default:
-            return '/src/assets/silver_necklace.webp';
+            return '/assets/silver_necklace.webp';
         }
       default:
-        return '/src/assets/silver_ring.webp';
+        return '/assets/silver_ring.webp';
     }
   };
 
