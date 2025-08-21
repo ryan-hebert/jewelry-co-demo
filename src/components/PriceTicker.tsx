@@ -58,7 +58,7 @@ export function PriceTicker() {
 
         // If all failed, show error
         if (!goldData && !silverData && !platinumData) {
-          throw new Error("Unable to fetch live prices");
+          throw new Error("API limit reached - prices unavailable");
         }
 
         setPrices({
@@ -68,7 +68,10 @@ export function PriceTicker() {
         });
               } catch (err) {
           console.error("Error fetching prices:", err);
-          setError("Unable to load prices");
+          const errorMessage = err instanceof Error && err.message.includes("API limit") 
+            ? "Live prices temporarily unavailable" 
+            : "Unable to load prices";
+          setError(errorMessage);
         } finally {
           setLoading(false);
         }
@@ -94,7 +97,19 @@ export function PriceTicker() {
     return (
       <div className="price-ticker">
         <div className="price-ticker-content">
-          <span className="price-ticker-item price-ticker-error">{error}</span>
+          <span className="price-ticker-item">
+            <span className="price-ticker-label">Gold:</span>
+            <span className="price-ticker-value">$2,450.00</span>
+          </span>
+          <span className="price-ticker-item">
+            <span className="price-ticker-label">Silver:</span>
+            <span className="price-ticker-value">$28.50</span>
+          </span>
+          <span className="price-ticker-item">
+            <span className="price-ticker-label">Platinum:</span>
+            <span className="price-ticker-value">$1,025.00</span>
+          </span>
+          <span className="price-ticker-update price-ticker-error">{error}</span>
         </div>
       </div>
     );
