@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: jewelry-api
+    env: docker
+    plan: free
+    dockerfilePath: ./backend/JewelryApi/Dockerfile
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: 8080
