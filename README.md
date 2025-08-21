@@ -5,11 +5,13 @@ A full-stack jewelry customization e-commerce application built with React + Typ
 ## Features
 
 - **Product Customization**: Choose jewelry type, metal, stone, and size with real-time price calculation
+- **Favorites System**: Save your favorite designs with heart icon and view them in a dedicated favorites page
 - **Shopping Cart**: Add, remove, and manage cart items with live total updates
 - **Checkout Process**: Complete order flow with customer information
 - **Order Confirmation**: Detailed order summary with order ID and customer details
 - **Responsive Design**: Modern, mobile-friendly UI with beautiful animations
 - **Type Safety**: Full TypeScript implementation for both frontend and backend
+- **localStorage Persistence**: Favorites persist across browser sessions
 
 ## Tech Stack
 
@@ -110,6 +112,12 @@ jewelry-customizer/
 - `POST /cart` - Adds item to cart
 - `DELETE /cart/{index}` - Removes item at specified index
 
+### Favorites
+- `GET /favorites` - Returns user's favorite designs
+- `POST /favorites` - Adds design to favorites
+- `DELETE /favorites/{id}` - Removes design from favorites
+- `GET /favorites/check` - Checks if a design is favorited
+
 ### Orders
 - `POST /checkout` - Processes order and clears cart
 - `GET /orders` - Returns all orders (for demo purposes)
@@ -143,10 +151,12 @@ Ring Base ($200) + Gold ($100) + Diamond ($500) + Medium Size (×1.2) = **$960**
 1. **Product Selection**: Choose between Ring Base or Necklace Base
 2. **Customization**: Select metal type, stone, and size
 3. **Price Calculation**: Real-time price updates as you customize
-4. **Add to Cart**: Add customized item to shopping cart
-5. **Cart Management**: Review items, remove if needed, see total
-6. **Checkout**: Enter customer information (name and email)
-7. **Order Confirmation**: View order details and confirmation
+4. **Add to Favorites**: Click heart icon to save your favorite designs
+5. **View Favorites**: Navigate to favorites page to see all saved designs
+6. **Add to Cart**: Add customized item to shopping cart
+7. **Cart Management**: Review items, remove if needed, see total
+8. **Checkout**: Enter customer information (name and email)
+9. **Order Confirmation**: View order details and confirmation
 
 ## Deployment
 

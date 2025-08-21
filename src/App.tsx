@@ -4,14 +4,16 @@ import type { CartItem, Order } from './types/order';
 import { apiService } from './services/api';
 import ProductCustomizer from './components/ProductCustomizer.tsx';
 import ShoppingCart from './components/ShoppingCart.tsx';
+import FavoritesDisplay from './components/FavoritesDisplay.tsx';
 import Checkout from './components/Checkout.tsx';
 import OrderConfirmation from './components/OrderConfirmation.tsx';
 import { PriceTicker } from './components/PriceTicker.tsx';
+import { FavoritesProvider, useFavorites } from './contexts/FavoritesContext';
 import './App.css';
 
-type AppState = 'customizer' | 'cart' | 'checkout' | 'confirmation';
+type AppState = 'customizer' | 'cart' | 'favorites' | 'checkout' | 'confirmation';
 
-function App() {
+function AppContent() {
   const [currentState, setCurrentState] = useState<AppState>('customizer');
   const [products, setProducts] = useState<Product[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -19,6 +21,7 @@ function App() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { state: favoritesState } = useFavorites();
 
   // Load products on component mount
   useEffect(() => {
@@ -118,26 +121,32 @@ function App() {
   }
 
     return (
-    <div className="app">
-      <header className="app-header">
-        <div className="container">
-          <h1>Ryan H Jewelry Co.</h1>
-          <nav className="app-nav">
-            <button
-              className={`btn ${currentState === 'customizer' ? 'btn-active' : 'btn-ghost'}`}
-              onClick={() => setCurrentState('customizer')}
-            >
-              Customize
-            </button>
-            <button
-              className={`btn ${currentState === 'cart' ? 'btn-active' : 'btn-ghost'}`}
-              onClick={() => setCurrentState('cart')}
-            >
-              Cart ({cartItems.length})
-            </button>
-          </nav>
-        </div>
-      </header>
+      <div className="app">
+        <header className="app-header">
+          <div className="container">
+            <h1>Ryan H Jewelry Co.</h1>
+            <nav className="app-nav">
+              <button
+                className={`btn ${currentState === 'customizer' ? 'btn-active' : 'btn-ghost'}`}
+                onClick={() => setCurrentState('customizer')}
+              >
+                Customize
+              </button>
+              <button
+                className={`btn ${currentState === 'favorites' ? 'btn-active' : 'btn-ghost'}`}
+                onClick={() => setCurrentState('favorites')}
+              >
+                Favorites ({favoritesState.count})
+              </button>
+              <button
+                className={`btn ${currentState === 'cart' ? 'btn-active' : 'btn-ghost'}`}
+                onClick={() => setCurrentState('cart')}
+              >
+                Cart ({cartItems.length})
+              </button>
+            </nav>
+          </div>
+        </header>
 
       <PriceTicker />
 
@@ -146,6 +155,12 @@ function App() {
         {currentState === 'customizer' && (
           <ProductCustomizer 
             products={products}
+            onAddToCart={handleAddToCart}
+          />
+        )}
+
+        {currentState === 'favorites' && (
+          <FavoritesDisplay 
             onAddToCart={handleAddToCart}
           />
         )}
@@ -184,6 +199,14 @@ function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <FavoritesProvider>
+      <AppContent />
+    </FavoritesProvider>
   );
 }
 

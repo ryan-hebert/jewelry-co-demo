@@ -19,6 +19,7 @@ builder.Services.AddSingleton<PricingService>();
 builder.Services.AddSingleton<CartService>();
 builder.Services.AddSingleton<EmailService>();
 builder.Services.AddSingleton<OrderService>();
+builder.Services.AddSingleton<FavoriteService>();
 
 var app = builder.Build();
 
@@ -148,6 +149,64 @@ app.MapGet("/orders", (OrderService orderService) =>
     return Results.Ok(orders);
 })
 .WithName("GetOrders");
+
+// GET /favorites - Returns all favorite items
+app.MapGet("/favorites", (FavoriteService favoriteService) =>
+{
+    var favorites = favoriteService.GetFavorites();
+    return Results.Ok(new 
+    { 
+        Items = favorites, 
+        Count = favoriteService.GetFavoriteCount()
+    });
+})
+.WithName("GetFavorites");
+
+// POST /favorites - Adds item to favorites
+app.MapPost("/favorites", (AddFavoriteRequest request, FavoriteService favoriteService, ProductService productService) =>
+{
+    // Validate that the product exists
+    if (!productService.ProductExists(request.ProductId))
+        return Results.BadRequest("Invalid product ID");
+
+    var added = favoriteService.AddFavorite(request);
+    if (!added)
+        return Results.BadRequest("This design is already in your favorites");
+
+    var favorites = favoriteService.GetFavorites();
+    return Results.Ok(new 
+    { 
+        Items = favorites, 
+        Count = favoriteService.GetFavoriteCount(),
+        Message = "Design added to favorites"
+    });
+})
+.WithName("AddToFavorites");
+
+// DELETE /favorites/{id} - Removes item from favorites
+app.MapDelete("/favorites/{id}", (string id, FavoriteService favoriteService) =>
+{
+    var removed = favoriteService.RemoveFavorite(id);
+    if (!removed)
+        return Results.NotFound("Favorite item not found");
+
+    var favorites = favoriteService.GetFavorites();
+    return Results.Ok(new 
+    { 
+        Items = favorites, 
+        Count = favoriteService.GetFavoriteCount(),
+        Message = "Design removed from favorites"
+    });
+})
+.WithName("RemoveFromFavorites");
+
+// GET /favorites/check - Checks if a specific design is favorited
+app.MapGet("/favorites/check", (int productId, string metal, string stone, string caratSize, string? ringSize, string? necklaceSize, FavoriteService favoriteService) =>
+{
+    var isFavorited = favoriteService.IsFavorited(productId, metal, stone, caratSize, ringSize, necklaceSize);
+    return Results.Ok(new { IsFavorited = isFavorited });
+})
+.WithName("CheckFavorite");
 
 // Health check endpoint
 app.MapGet("/health", () => Results.Ok(new { Status = "Healthy", Timestamp = DateTime.UtcNow }))

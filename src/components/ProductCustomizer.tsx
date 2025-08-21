@@ -4,6 +4,8 @@ import type { CartItem } from '../types/order';
 import { METAL_OPTIONS, STONE_OPTIONS, CARAT_OPTIONS, RING_SIZE_OPTIONS, NECKLACE_SIZE_OPTIONS } from '../types/customization';
 import { apiService } from '../services/api';
 import JewelryViewer from './JewelryViewer.tsx';
+import HeartIcon from './HeartIcon.tsx';
+import { useFavorites } from '../contexts/FavoritesContext';
 
 interface ProductCustomizerProps {
   products: Product[];
@@ -19,6 +21,8 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
   const [selectedNecklaceSize, setSelectedNecklaceSize] = useState<string>(NECKLACE_SIZE_OPTIONS[0]);
   const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  
+  const { addFavorite, removeFavorite, isFavorited, getFavoriteId } = useFavorites();
 
   // Debounced price calculation
   const debouncedCalculatePrice = useCallback(
@@ -78,6 +82,57 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
     onAddToCart(cartItem);
   };
 
+  const handleToggleFavorite = async () => {
+    if (!selectedProduct || calculatedPrice === null) return;
+
+    const isRing = selectedProduct.name.toLowerCase().includes('ring');
+    const currentIsFavorited = isFavorited(
+      selectedProduct.id,
+      selectedMetal,
+      selectedStone,
+      selectedCaratSize,
+      isRing ? selectedRingSize : undefined,
+      !isRing ? selectedNecklaceSize : undefined
+    );
+
+    if (currentIsFavorited) {
+      // Find the favorite item to remove
+      const favoriteId = getFavoriteId(
+        selectedProduct.id,
+        selectedMetal,
+        selectedStone,
+        selectedCaratSize,
+        isRing ? selectedRingSize : undefined,
+        !isRing ? selectedNecklaceSize : undefined
+      );
+      if (favoriteId) {
+        await removeFavorite(favoriteId);
+      }
+    } else {
+      // Add to favorites
+      const favoriteRequest = {
+        productId: selectedProduct.id,
+        productName: selectedProduct.name,
+        metal: selectedMetal,
+        stone: selectedStone,
+        caratSize: selectedCaratSize,
+        ringSize: isRing ? selectedRingSize : undefined,
+        necklaceSize: !isRing ? selectedNecklaceSize : undefined,
+        price: calculatedPrice,
+      };
+      await addFavorite(favoriteRequest);
+    }
+  };
+
+  const currentIsFavorited = selectedProduct && calculatedPrice !== null ? isFavorited(
+    selectedProduct.id,
+    selectedMetal,
+    selectedStone,
+    selectedCaratSize,
+    selectedProduct.name.toLowerCase().includes('ring') ? selectedRingSize : undefined,
+    !selectedProduct.name.toLowerCase().includes('ring') ? selectedNecklaceSize : undefined
+  ) : false;
+
   return (
     <div className="product-customizer">
                    <h2>Customize Your Jewelry</h2>
@@ -87,14 +142,22 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
         {/* 3D Jewelry Viewer */}
         <div className="customizer-section">
           <h3>Preview Your Design</h3>
-                           <JewelryViewer
-                   key={`${selectedProduct?.name}-${selectedMetal}-${selectedCaratSize}-${selectedRingSize}-${selectedNecklaceSize}`}
-                   productType={selectedProduct?.name.toLowerCase().includes('ring') ? 'ring' : 'necklace'}
-                   metal={selectedMetal.toLowerCase() as 'silver' | 'gold' | 'rose gold'}
-                   caratSize={selectedCaratSize}
-                   ringSize={selectedRingSize}
-                   necklaceSize={selectedNecklaceSize}
-                 />
+          <div style={{ position: 'relative' }}>
+            <JewelryViewer
+              key={`${selectedProduct?.name}-${selectedMetal}-${selectedCaratSize}-${selectedRingSize}-${selectedNecklaceSize}`}
+              productType={selectedProduct?.name.toLowerCase().includes('ring') ? 'ring' : 'necklace'}
+              metal={selectedMetal.toLowerCase() as 'silver' | 'gold' | 'rose gold'}
+            />
+            {selectedProduct && calculatedPrice !== null && (
+              <HeartIcon
+                isFavorited={currentIsFavorited}
+                onToggle={handleToggleFavorite}
+                size="medium"
+                className="heart-icon--top-right heart-icon--overlay"
+                disabled={loading}
+              />
+            )}
+          </div>
         </div>
         {/* Product Selection */}
         <div className="customizer-section">

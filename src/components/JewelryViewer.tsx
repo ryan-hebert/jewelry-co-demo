@@ -3,12 +3,12 @@ import { useState } from 'react';
 interface JewelryViewerProps {
   productType: 'ring' | 'necklace';
   metal: 'silver' | 'gold' | 'rose gold';
-  caratSize: string;
-  ringSize: string;
-  necklaceSize: string;
+  caratSize?: string;
+  ringSize?: string;
+  necklaceSize?: string;
 }
 
-export default function JewelryViewer({ productType, metal, caratSize, ringSize, necklaceSize }: JewelryViewerProps) {
+export default function JewelryViewer({ productType, metal }: JewelryViewerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -123,11 +123,7 @@ export default function JewelryViewer({ productType, metal, caratSize, ringSize,
         />
       </div>
 
-      <div className="jewelry-viewer-controls">
-        <p className="jewelry-viewer-hint">
-          {metal} {productType} • Diamond ({caratSize}) • {productType === 'ring' ? `Size ${ringSize}` : `Length ${necklaceSize}`}
-        </p>
-      </div>
+
     </div>
   );
 }

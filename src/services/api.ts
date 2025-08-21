@@ -2,6 +2,7 @@ import type { Product } from '../types/product';
 import type { CustomizationRequest, CustomizationResponse } from '../types/customization';
 import type { CartResponse } from '../types/cart';
 import type { CartItem, OrderRequest, Order } from '../types/order';
+import type { AddFavoriteRequest, FavoritesResponse, CheckFavoriteResponse } from '../types/favorites';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -69,6 +70,37 @@ class ApiService {
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.request<{ status: string; timestamp: string }>('/health');
+  }
+
+  // Favorites
+  async getFavorites(): Promise<FavoritesResponse> {
+    return this.request<FavoritesResponse>('/favorites');
+  }
+
+  async addToFavorites(request: AddFavoriteRequest): Promise<FavoritesResponse> {
+    return this.request<FavoritesResponse>('/favorites', {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  async removeFromFavorites(id: string): Promise<FavoritesResponse> {
+    return this.request<FavoritesResponse>(`/favorites/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async checkFavorite(productId: number, metal: string, stone: string, caratSize: string, ringSize?: string, necklaceSize?: string): Promise<CheckFavoriteResponse> {
+    const params = new URLSearchParams({
+      productId: productId.toString(),
+      metal,
+      stone,
+      caratSize,
+      ...(ringSize && { ringSize }),
+      ...(necklaceSize && { necklaceSize }),
+    });
+    
+    return this.request<CheckFavoriteResponse>(`/favorites/check?${params}`);
   }
 }
 

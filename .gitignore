@@ -24,7 +24,8 @@ dist-ssr
 *.sw?
 
 # instruction files
-docs/jewelry_micro_ecommerce_instructions.md
+docs
+
 
 # env files
 .env
