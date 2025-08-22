@@ -81,11 +81,11 @@ export function PriceTicker() {
         }
 
         // If no valid cache, fetch from API
-        const response = await fetch("https://api.metals.dev/v1/latest", {
+        const apiKey = import.meta.env.VITE_METALSDEV_API_KEY || '';
+        const response = await fetch(`https://api.metals.dev/v1/latest?api_key=${apiKey}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_METALSDEV_API_KEY || ''}`,
           },
         });
 
