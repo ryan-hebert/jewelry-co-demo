@@ -12,6 +12,7 @@ A full-stack jewelry customization e-commerce application built with React + Typ
 - **Responsive Design**: Modern, mobile-friendly UI with beautiful animations
 - **Type Safety**: Full TypeScript implementation for both frontend and backend
 - **localStorage Persistence**: Favorites persist across browser sessions
+- **Intelligent Caching**: Metal prices cached for 24 hours to minimize API calls
 
 ## Tech Stack
 
@@ -78,10 +79,10 @@ jewelry-customizer/
    ```bash
    cp .env.example .env
    ```
-   Then edit `.env` and add your GoldAPI token:
+   Then edit `.env` and add your Metals.Dev API key:
    ```
    VITE_API_URL=http://localhost:5001
-   VITE_GOLDAPI_TOKEN=your_actual_goldapi_token
+   VITE_METALSDEV_API_KEY=your_metalsdev_api_key
    ```
 
 3. Start the development server:

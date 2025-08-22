@@ -6,79 +6,137 @@ type Prices = {
   platinum: number | null;
 };
 
+type MetalsDevResponse = {
+  status: string;
+  currency: string;
+  unit: string;
+  metals: {
+    gold: number;
+    silver: number;
+    platinum: number;
+  };
+  currencies: Record<string, number>;
+  timestamp: string;
+};
+
+type CachedPrices = {
+  prices: Prices;
+  timestamp: number;
+};
+
+const CACHE_KEY = 'metals_prices_cache';
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
 export function PriceTicker() {
   const [prices, setPrices] = useState<Prices>({ gold: null, silver: null, platinum: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Load cached prices from localStorage
+  const loadCachedPrices = (): CachedPrices | null => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const parsed: CachedPrices = JSON.parse(cached);
+        return parsed;
+      }
+    } catch (err) {
+      console.warn('Failed to load cached prices:', err);
+    }
+    return null;
+  };
+
+  // Save prices to localStorage with timestamp
+  const saveCachedPrices = (prices: Prices) => {
+    try {
+      const cacheData: CachedPrices = {
+        prices,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+    } catch (err) {
+      console.warn('Failed to save cached prices:', err);
+    }
+  };
+
+  // Check if cache is still valid (less than 24 hours old)
+  const isCacheValid = (timestamp: number): boolean => {
+    return Date.now() - timestamp < CACHE_DURATION;
+  };
 
   useEffect(() => {
     async function fetchPrices() {
       try {
         setLoading(true);
         setError(null);
+
+        // First, try to load from cache
+        const cached = loadCachedPrices();
         
-        const [goldRes, silverRes, platinumRes] = await Promise.all([
-          fetch("https://www.goldapi.io/api/XAU/USD", {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-access-token': import.meta.env.VITE_GOLDAPI_TOKEN || '',
-            },
-          }),
-          fetch("https://www.goldapi.io/api/XAG/USD", {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-access-token': import.meta.env.VITE_GOLDAPI_TOKEN || '',
-            },
-          }),
-          fetch("https://www.goldapi.io/api/XPT/USD", {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-access-token': import.meta.env.VITE_GOLDAPI_TOKEN || '',
-            },
-          }),
-        ]);
-
-        // Check if responses are ok, but don't throw immediately
-        let goldData = null;
-        let silverData = null;
-        let platinumData = null;
-
-        if (goldRes.ok) {
-          goldData = await goldRes.json();
-        }
-        if (silverRes.ok) {
-          silverData = await silverRes.json();
-        }
-        if (platinumRes.ok) {
-          platinumData = await platinumRes.json();
+        if (cached && isCacheValid(cached.timestamp)) {
+          // Use cached data if it's still valid
+          setPrices(cached.prices);
+          setLoading(false);
+          return;
         }
 
-        // If all failed, show error
-        if (!goldData && !silverData && !platinumData) {
-          throw new Error("API limit reached - prices unavailable");
-        }
-
-        setPrices({
-          gold: goldData?.price || null,
-          silver: silverData?.price || null,
-          platinum: platinumData?.price || null,
+        // If no valid cache, fetch from API
+        const response = await fetch("https://api.metals.dev/v1/latest", {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_METALSDEV_API_KEY || ''}`,
+          },
         });
-              } catch (err) {
-          console.error("Error fetching prices:", err);
-          const errorMessage = err instanceof Error && err.message.includes("API limit") 
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data: MetalsDevResponse = await response.json();
+        
+        if (data.status !== 'success') {
+          throw new Error("API returned unsuccessful status");
+        }
+
+        const newPrices = {
+          gold: data.metals.gold || null,
+          silver: data.metals.silver || null,
+          platinum: data.metals.platinum || null,
+        };
+
+        // Save to cache
+        saveCachedPrices(newPrices);
+        
+        setPrices(newPrices);
+      } catch (err) {
+        console.error("Error fetching prices:", err);
+        
+        // If API fails, try to use cached data even if expired
+        const cached = loadCachedPrices();
+        if (cached) {
+          setPrices(cached.prices);
+          setError("Using cached prices - live update unavailable");
+        } else {
+          const errorMessage = err instanceof Error && err.message.includes("API request failed") 
             ? "Live prices temporarily unavailable" 
             : "Unable to load prices";
           setError(errorMessage);
-        } finally {
-          setLoading(false);
         }
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 86400000); // refresh every 24 hours (1 day)
+    
+    // Set up interval to check for cache expiration (check every hour)
+    const interval = setInterval(() => {
+      const cached = loadCachedPrices();
+      if (!cached || !isCacheValid(cached.timestamp)) {
+        fetchPrices();
+      }
+    }, 60 * 60 * 1000); // Check every hour
     
     return () => clearInterval(interval);
   }, []);
@@ -136,7 +194,9 @@ export function PriceTicker() {
                         <span className="price-ticker-value">${prices.platinum.toFixed(2)}</span>
                       </span>
                     )}
-        <span className="price-ticker-update">Live prices • Updates daily</span>
+        <span className="price-ticker-update">
+          {error && error.includes("cached") ? "Cached prices • Updates daily" : "Live prices • Updates daily"}
+        </span>
       </div>
     </div>
   );
