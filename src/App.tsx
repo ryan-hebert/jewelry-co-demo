@@ -125,7 +125,9 @@ function AppContent() {
       <div className="app">
         <header className="app-header">
           <div className="container">
-            <h1>Ryan H Jewelry Co.</h1>
+            <div className="header-brand" onClick={() => setCurrentState('customizer')}>
+              <img src="/logo.png" alt="Ryan H Jewelry Co. Logo" className="header-logo" />
+            </div>
             <nav className="app-nav">
               <button
                 className={`btn ${currentState === 'customizer' ? 'btn-active' : 'btn-ghost'}`}
