@@ -6,6 +6,7 @@ import { apiService } from '../services/api';
 import JewelryViewer from './JewelryViewer.tsx';
 import HeartIcon from './HeartIcon.tsx';
 import { useFavorites } from '../contexts/FavoritesContext';
+import { useToast } from './ToastContainer.tsx';
 
 interface ProductCustomizerProps {
   products: Product[];
@@ -23,6 +24,7 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
   const [loading, setLoading] = useState(false);
   
   const { addFavorite, removeFavorite, isFavorited, getFavoriteId } = useFavorites();
+  const { showToast } = useToast();
 
   // Debounced price calculation
   const debouncedCalculatePrice = useCallback(
@@ -80,6 +82,7 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
     };
 
     onAddToCart(cartItem);
+    showToast('success', 'Item added to cart!');
   };
 
   const handleToggleFavorite = async () => {
@@ -105,9 +108,10 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
         isRing ? selectedRingSize : undefined,
         !isRing ? selectedNecklaceSize : undefined
       );
-      if (favoriteId) {
-        await removeFavorite(favoriteId);
-      }
+              if (favoriteId) {
+          await removeFavorite(favoriteId);
+          showToast('info', 'Item removed from favorites!');
+        }
     } else {
       // Add to favorites
       const favoriteRequest = {
@@ -121,6 +125,7 @@ export default function ProductCustomizer({ products, onAddToCart }: ProductCust
         price: calculatedPrice,
       };
       await addFavorite(favoriteRequest);
+      showToast('success', 'Item added to favorites!');
     }
   };
 

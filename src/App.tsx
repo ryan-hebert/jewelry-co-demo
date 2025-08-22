@@ -7,8 +7,9 @@ import ShoppingCart from './components/ShoppingCart.tsx';
 import FavoritesDisplay from './components/FavoritesDisplay.tsx';
 import Checkout from './components/Checkout.tsx';
 import OrderConfirmation from './components/OrderConfirmation.tsx';
-import { PriceTicker } from './components/PriceTicker.tsx';
+import { Footer } from './components/Footer.tsx';
 import { FavoritesProvider, useFavorites } from './contexts/FavoritesContext';
+import { ToastProvider } from './components/ToastContainer.tsx';
 import './App.css';
 
 type AppState = 'customizer' | 'cart' | 'favorites' | 'checkout' | 'confirmation';
@@ -148,8 +149,6 @@ function AppContent() {
           </div>
         </header>
 
-      <PriceTicker />
-
       <main className="app-main">
         <div className="container">
         {currentState === 'customizer' && (
@@ -193,11 +192,7 @@ function AppContent() {
         </div>
       </main>
       
-      <footer className="app-footer">
-        <div className="container">
-          © {new Date().getFullYear()} Ryan H Jewelry Co. Demo • Weekdays 8AM–7PM CST • 337-290-5522
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
@@ -205,7 +200,9 @@ function AppContent() {
 function App() {
   return (
     <FavoritesProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </FavoritesProvider>
   );
 }

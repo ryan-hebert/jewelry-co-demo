@@ -2,6 +2,7 @@ import { useFavorites } from '../contexts/FavoritesContext';
 import HeartIcon from './HeartIcon';
 import JewelryViewer from './JewelryViewer';
 import type { CartItem } from '../types/order';
+import { useToast } from './ToastContainer';
 
 interface FavoritesDisplayProps {
   onAddToCart: (item: CartItem) => void;
@@ -9,9 +10,11 @@ interface FavoritesDisplayProps {
 
 export default function FavoritesDisplay({ onAddToCart }: FavoritesDisplayProps) {
   const { state, removeFavorite } = useFavorites();
+  const { showToast } = useToast();
 
   const handleRemoveFavorite = async (id: string) => {
     await removeFavorite(id);
+    showToast('info', 'Item removed from favorites!');
   };
 
   const handleAddToCart = (favorite: any) => {
@@ -26,6 +29,7 @@ export default function FavoritesDisplay({ onAddToCart }: FavoritesDisplayProps)
       price: favorite.price,
     };
     onAddToCart(cartItem);
+    showToast('success', 'Item added to cart!');
   };
 
   if (state.loading) {
